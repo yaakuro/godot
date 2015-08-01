@@ -325,9 +325,12 @@ void OS_X11::initialize(const VideoMode& p_desired,int p_video_driver,int p_audi
 	XSetClassHint(x11_display, x11_window, classHint);
 	XFree(classHint);
 
-	wm_delete = XInternAtom(x11_display, "WM_DELETE_WINDOW", true);	
-	XSetWMProtocols(x11_display, x11_window, &wm_delete, 1);
-		
+	wm_delete = XInternAtom(x11_display, "WM_DELETE_WINDOW", true);
+	wm_protocols = XInternAtom(x11_display, "WM_PROTOCOLS", False);
+	_net_wm_ping = XInternAtom(x11_display, "_NET_WM_PING", False);
+	Atom atoms[3] = {wm_delete, wm_protocols, _net_wm_ping};
+	
+	XSetWMProtocols(x11_display, x11_window, atoms, 3);
 
 	if (xim && xim_style) {
 		
@@ -1376,11 +1379,22 @@ void OS_X11::process_xevents() {
 		} break;
 
 
-		case ClientMessage:    
-		
-			if ((unsigned int)event.xclient.data.l[0]==(unsigned int)wm_delete)
+		case ClientMessage: {
+
+
+			if ((unsigned int)event.xclient.data.l[0]==(unsigned int)wm_delete) {
 				main_loop->notification(MainLoop::NOTIFICATION_WM_QUIT_REQUEST);
-			break;
+			}
+			// Some WM's sends this message to a client to check if it is still alive. To prevent complains if different ways of the WM we send back
+			// the reply.
+			else if((event.xclient.message_type == wm_protocols) && (event.xclient.format == 32) && ( (Atom)event.xclient.data.l[0] == _net_wm_ping)) {
+				Window root = DefaultRootWindow(x11_display);
+				event.xclient.window = root;
+				XSendEvent(x11_display, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
+			}
+			
+		}break;
+		
 		default:
 			break;
 		}

@@ -68,6 +68,9 @@ typedef struct {
 class OS_X11 : public OS_Unix {
 
 	Atom wm_delete;
+	Atom wm_protocols;	// We need this atom to check for _net_wm_ping.
+	Atom _net_wm_ping;	// This message is send to clients to check if they are still alive. We have to answer back.
+			
 #if defined(OPENGL_ENABLED) || defined(LEGACYGL_ENABLED)
 	ContextGL_X11 *context_gl;
 #endif
