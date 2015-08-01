@@ -1380,8 +1380,6 @@ void OS_X11::process_xevents() {
 
 
 		case ClientMessage: {
-
-
 			if ((unsigned int)event.xclient.data.l[0]==(unsigned int)wm_delete) {
 				main_loop->notification(MainLoop::NOTIFICATION_WM_QUIT_REQUEST);
 			}
@@ -1392,7 +1390,6 @@ void OS_X11::process_xevents() {
 				event.xclient.window = root;
 				XSendEvent(x11_display, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
 			}
-			
 		}break;
 		
 		default:
