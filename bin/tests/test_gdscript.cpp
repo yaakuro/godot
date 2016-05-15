@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -81,7 +81,7 @@ static String _parser_expr(const GDParser::Node *p_expr) {
 
 		case GDParser::Node::TYPE_IDENTIFIER: {
 
-			const GDParser::IdentifierNode *id_node = static_cast<const GDParser::IdentifierNode *>(p_expr);			
+			const GDParser::IdentifierNode *id_node = static_cast<const GDParser::IdentifierNode *>(p_expr);
 			txt=id_node->name;
 		} break;
 		case GDParser::Node::TYPE_CONSTANT: {

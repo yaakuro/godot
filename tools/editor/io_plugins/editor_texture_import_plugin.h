@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -70,7 +70,7 @@ private:
 	static EditorTextureImportPlugin *singleton[MODE_MAX];
 	//used by other importers such as mesh
 
-	Error _process_texture_data(Ref<ImageTexture> &texture, int format, float quality, int flags,EditorExportPlatform::ImageCompression p_compr,int tex_flags,int shrink);
+	Error _process_texture_data(Ref<ImageTexture> &texture, int format, float quality, int flags,EditorExportPlatform::ImageCompression p_compr,int tex_flags,float shrink);
 	void compress_image(EditorExportPlatform::ImageCompression p_mode,Image& image,bool p_smaller);
 public:
 
@@ -123,6 +123,7 @@ public:
 	virtual Vector<uint8_t> custom_export(String& p_path,const Ref<EditorExportPlatform> &p_platform);
 	EditorTextureExportPlugin();
 };
+
 class EditorImportTextureOptions : public VBoxContainer {
 
 	OBJ_TYPE( EditorImportTextureOptions, VBoxContainer );

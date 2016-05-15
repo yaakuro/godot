@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -239,12 +239,17 @@ void UndoRedo::_process_operation_list(List<Operation>::Element *E) {
 
 			case Operation::TYPE_METHOD: {
 
-				obj->call(op.name,VARIANT_ARGS_FROM_ARRAY(op.args));				
+				obj->call(op.name,VARIANT_ARGS_FROM_ARRAY(op.args));
 #ifdef TOOLS_ENABLED
 				Resource* res = obj->cast_to<Resource>();
 				if (res)
 					res->set_edited(true);
+
 #endif
+
+				if (method_callback) {
+					method_callback(method_callbck_ud,obj,op.name,VARIANT_ARGS_FROM_ARRAY(op.args));
+				}
 			} break;
 			case Operation::TYPE_PROPERTY: {
 
@@ -254,6 +259,9 @@ void UndoRedo::_process_operation_list(List<Operation>::Element *E) {
 				if (res)
 					res->set_edited(true);
 #endif
+				if (property_callback) {
+					property_callback(prop_callback_ud,obj,op.name,op.args[0]);
+				}
 			} break;
 			case Operation::TYPE_REFERENCE: {
 				//do nothing
@@ -325,6 +333,19 @@ void UndoRedo::set_commit_notify_callback(CommitNotifyCallback p_callback,void* 
 	callback_ud=p_ud;
 }
 
+void UndoRedo::set_method_notify_callback(MethodNotifyCallback p_method_callback,void* p_ud) {
+
+	method_callback=p_method_callback;
+	method_callbck_ud=p_ud;
+}
+
+void UndoRedo::set_property_notify_callback(PropertyNotifyCallback p_property_callback,void* p_ud){
+
+	property_callback=p_property_callback;
+	prop_callback_ud=p_ud;
+}
+
+
 UndoRedo::UndoRedo() {
 
 	version=1;
@@ -334,6 +355,12 @@ UndoRedo::UndoRedo() {
 	merging=true;
 	callback=NULL;
 	callback_ud=NULL;
+
+	method_callbck_ud=NULL;
+	prop_callback_ud=NULL;
+	method_callback=NULL;
+	property_callback=NULL;
+
 }
 
 UndoRedo::~UndoRedo() {
@@ -423,10 +450,10 @@ void UndoRedo::_bind_methods() {
 
 	ObjectTypeDB::bind_method(_MD("create_action","name","mergeable"),&UndoRedo::create_action, DEFVAL(false) );
 	ObjectTypeDB::bind_method(_MD("commit_action"),&UndoRedo::commit_action);
-	
+
 	//ObjectTypeDB::bind_method(_MD("add_do_method","p_object", "p_method", "VARIANT_ARG_LIST"),&UndoRedo::add_do_method);
 	//ObjectTypeDB::bind_method(_MD("add_undo_method","p_object", "p_method", "VARIANT_ARG_LIST"),&UndoRedo::add_undo_method);
-	
+
 	{
 		MethodInfo mi;
 		mi.name="add_do_method";
@@ -455,8 +482,8 @@ void UndoRedo::_bind_methods() {
 		ObjectTypeDB::bind_native_method(METHOD_FLAGS_DEFAULT,"add_undo_method",&UndoRedo::_add_undo_method,mi,defargs);
 	}
 
-	ObjectTypeDB::bind_method(_MD("add_do_property","object", "property", "value:var"),&UndoRedo::add_do_property);
-	ObjectTypeDB::bind_method(_MD("add_undo_property","object", "property", "value:var"),&UndoRedo::add_undo_property);
+	ObjectTypeDB::bind_method(_MD("add_do_property","object", "property", "value:Variant"),&UndoRedo::add_do_property);
+	ObjectTypeDB::bind_method(_MD("add_undo_property","object", "property", "value:Variant"),&UndoRedo::add_undo_property);
 	ObjectTypeDB::bind_method(_MD("add_do_reference","object"),&UndoRedo::add_do_reference);
 	ObjectTypeDB::bind_method(_MD("add_undo_reference","object"),&UndoRedo::add_undo_reference);
 	ObjectTypeDB::bind_method(_MD("clear_history"),&UndoRedo::clear_history);

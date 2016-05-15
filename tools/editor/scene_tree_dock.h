@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -62,6 +62,8 @@ class SceneTreeDock : public VBoxContainer {
 		TOOL_MOVE_DOWN,
 		TOOL_DUPLICATE,
 		TOOL_REPARENT,
+		TOOL_NEW_SCENE_FROM,
+		TOOL_MULTI_EDIT,
 		TOOL_ERASE,
 		TOOL_BUTTON_MAX
 	};
@@ -89,6 +91,7 @@ class SceneTreeDock : public VBoxContainer {
 	ReparentDialog *reparent_dialog;
 	EditorFileDialog *file;
 	EditorSubScene *import_subscene_dialog;
+	EditorFileDialog *new_scene_from_dialog;
 
 	bool first_enter;
 
@@ -98,7 +101,9 @@ class SceneTreeDock : public VBoxContainer {
 	EditorNode *editor;
 
 	Node *_duplicate(Node *p_node, Map<Node*,Node*> &duplimap);
-	void _node_reparent(NodePath p_path,bool p_node_only);
+	void _node_reparent(NodePath p_path, bool p_keep_global_xform);
+	void _do_reparent(Node* p_new_parent, int p_position_in_parent, Vector<Node*> p_nodes, bool p_keep_global_xform);
+
 	void _set_owners(Node *p_owner, const Array& p_nodes);
 	void _load_request(const String& p_path);
 	void _script_open_request(const Ref<Script>& p_script);
@@ -118,9 +123,17 @@ class SceneTreeDock : public VBoxContainer {
 
 	void _import_subscene();
 
+	void _new_scene_from(String p_file);
+
 	bool _validate_no_foreign();
+	void _selection_changed();
 
 	void _fill_path_renames(Vector<StringName> base_path,Vector<StringName> new_base_path,Node * p_node, List<Pair<NodePath,NodePath> > *p_renames);
+
+	void _normalize_drop(Node*& to_node, int &to_pos,int p_type);
+
+	void _nodes_dragged(Array p_nodes,NodePath p_to,int p_type);
+	void _files_dropped(Vector<String> p_files,NodePath p_to,int p_type);
 
 protected:
 
@@ -130,7 +143,8 @@ public:
 
 	void import_subscene();
 	void set_edited_scene(Node* p_scene);
-	Node* instance(const String& p_path);
+	void instance(const String& p_path);
+	void instance_scenes(const Vector<String>& p_files,Node* parent,int p_pos);
 	void set_selected(Node *p_node, bool p_emit_selected=false);
 	void fill_path_renames(Node* p_node, Node *p_new_parent, List<Pair<NodePath,NodePath> > *p_renames);
 	void perform_node_renames(Node* p_base,List<Pair<NodePath,NodePath> > *p_renames, Map<Ref<Animation>, Set<int> > *r_rem_anims=NULL);

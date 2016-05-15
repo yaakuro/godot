@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -48,9 +48,11 @@ SceneStringNames::SceneStringNames() {
 	item_rect_changed=StaticCString::create("item_rect_changed");
 	size_flags_changed=StaticCString::create("size_flags_changed");
 	minimum_size_changed=StaticCString::create("minimum_size_changed");
+	sleeping_state_changed=StaticCString::create("sleeping_state_changed");
 
 	finished=StaticCString::create("finished");
 	animation_changed=StaticCString::create("animation_changed");
+	animation_started=StaticCString::create("animation_started");
 
 	mouse_enter=StaticCString::create("mouse_enter");
 	mouse_exit=StaticCString::create("mouse_exit");
@@ -170,4 +172,6 @@ SceneStringNames::SceneStringNames() {
 	speed=StaticCString::create("speed");
 
 	path_pp=NodePath("..");
+
+	_default=StaticCString::create("default");
 }

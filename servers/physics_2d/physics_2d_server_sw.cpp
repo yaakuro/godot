@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -255,6 +255,30 @@ real_t Physics2DServerSW::space_get_param(RID p_space,SpaceParameter p_param) co
 	const Space2DSW *space = space_owner.get(p_space);
 	ERR_FAIL_COND_V(!space,0);
 	return space->get_param(p_param);
+}
+
+void Physics2DServerSW::space_set_debug_contacts(RID p_space,int p_max_contacts) {
+
+	Space2DSW *space = space_owner.get(p_space);
+	ERR_FAIL_COND(!space);
+	space->set_debug_contacts(p_max_contacts);
+
+}
+
+Vector<Vector2> Physics2DServerSW::space_get_contacts(RID p_space) const {
+
+	Space2DSW *space = space_owner.get(p_space);
+	ERR_FAIL_COND_V(!space,Vector<Vector2>());
+	return space->get_debug_contacts();
+
+}
+
+int Physics2DServerSW::space_get_contact_count(RID p_space) const {
+
+	Space2DSW *space = space_owner.get(p_space);
+	ERR_FAIL_COND_V(!space,0);
+	return space->get_debug_contact_count();
+
 }
 
 Physics2DDirectSpaceState* Physics2DServerSW::space_get_direct_state(RID p_space) {
@@ -836,6 +860,15 @@ void Physics2DServerSW::body_apply_impulse(RID p_body, const Vector2& p_pos, con
 	body->wakeup();
 };
 
+void Physics2DServerSW::body_add_force(RID p_body, const Vector2& p_offset, const Vector2& p_force) {
+
+	Body2DSW *body = body_owner.get(p_body);
+	ERR_FAIL_COND(!body);
+
+	body->add_force(p_force,p_offset);
+	body->wakeup();
+};
+
 void Physics2DServerSW::body_set_axis_velocity(RID p_body, const Vector2& p_axis_velocity) {
 
 	Body2DSW *body = body_owner.get(p_body);
@@ -1072,6 +1105,25 @@ RID Physics2DServerSW::damped_spring_joint_create(const Vector2& p_anchor_a,cons
 
 }
 
+void Physics2DServerSW::pin_joint_set_param(RID p_joint, PinJointParam p_param, real_t p_value) {
+
+	Joint2DSW *j = joint_owner.get(p_joint);
+	ERR_FAIL_COND(!j);
+	ERR_FAIL_COND(j->get_type()!=JOINT_PIN);
+
+	PinJoint2DSW *pin_joint = static_cast<PinJoint2DSW*>(j);
+	pin_joint->set_param(p_param, p_value);
+}
+
+real_t Physics2DServerSW::pin_joint_get_param(RID p_joint, PinJointParam p_param) const {
+	Joint2DSW *j = joint_owner.get(p_joint);
+	ERR_FAIL_COND_V(!j,0);
+	ERR_FAIL_COND_V(j->get_type()!=JOINT_PIN,0);
+
+	PinJoint2DSW *pin_joint = static_cast<PinJoint2DSW*>(j);
+	return pin_joint->get_param(p_param);
+}
+
 void Physics2DServerSW::damped_string_joint_set_param(RID p_joint, DampedStringParam p_param, real_t p_value) {
 
 
@@ -1279,8 +1331,11 @@ int Physics2DServerSW::get_process_info(ProcessInfo p_info) {
 }
 
 
+Physics2DServerSW *Physics2DServerSW::singletonsw=NULL;
+
 Physics2DServerSW::Physics2DServerSW() {
 
+	singletonsw=this;
 	BroadPhase2DSW::create_func=BroadPhase2DHashGrid::_create;
 //	BroadPhase2DSW::create_func=BroadPhase2DBasic::_create;
 

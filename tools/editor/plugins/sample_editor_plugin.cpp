@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2016 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -156,8 +156,14 @@ void SampleEditor::generate_preview_texture(const Ref<Sample>& p_sample,Ref<Imag
 					ima_adpcm.last_nibble++;
 					const uint8_t *src_ptr=sdata;
 
+					int ofs = ima_adpcm.last_nibble>>1;
+
+					if (stereo)
+						ofs*=2;
+
 					nibble = (ima_adpcm.last_nibble&1)?
-							(src_ptr[ima_adpcm.last_nibble>>1]>>4):(src_ptr[ima_adpcm.last_nibble>>1]&0xF);
+							(src_ptr[ofs]>>4):(src_ptr[ofs]&0xF);
+
 					step=_ima_adpcm_step_table[ima_adpcm.step_index];
 
 					ima_adpcm.step_index += _ima_adpcm_index_table[nibble];
@@ -322,7 +328,7 @@ void SampleEditor::_update_sample() {
 		return; //bye or unsupported
 
 	generate_preview_texture(sample,peakdisplay);
-	info_label->set_text("Length: "+itos(sample->get_length())+" frames ("+String::num(sample->get_length()/(float)sample->get_mix_rate(),2)+" s), "+(sample->get_format()==Sample::FORMAT_PCM16?"16 Bits, ":"8 bits, ")+(sample->is_stereo()?"Stereo.":"Mono."));
+	info_label->set_text(TTR("Length: ")+itos(sample->get_length())+" frames ("+String::num(sample->get_length()/(float)sample->get_mix_rate(),2)+" s), "+(sample->get_format()==Sample::FORMAT_PCM16?"16 Bits, ":"8 bits, ")+(sample->is_stereo()?"Stereo.":"Mono."));
 
 	library->add_sample("default",sample);
 }
