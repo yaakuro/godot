@@ -451,7 +451,7 @@ private:
 	void _display_top_editors(bool p_display);
 	void _set_top_editors(Vector<EditorPlugin*> p_editor_plugins_over);
 	void _set_editing_top_editors(Object * p_current_object);
-        
+
 	void _quick_opened();
 	void _quick_run();
 
@@ -584,6 +584,7 @@ public:
 	static void add_editor_plugin(EditorPlugin *p_editor);
 	static void remove_editor_plugin(EditorPlugin *p_editor);
 
+	void new_inherited_scene() { _menu_option_confirm(FILE_NEW_INHERITED_SCENE,false); }
 
 
 
@@ -745,7 +746,7 @@ public:
 	EditorPluginList();
 	~EditorPluginList();
 
-} ; 
+} ;
 
 struct EditorProgressBG {
 
