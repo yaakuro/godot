@@ -35,7 +35,7 @@
 #ifndef CONTEXT_GL_WIN_H
 #define CONTEXT_GL_WIN_H
 
-#include "drivers/gl_context/context_gl.h"
+#include "servers/visual/rendering_context.h"
 #include "error_list.h"
 #include "os/os.h"
 
@@ -43,7 +43,7 @@
 
 typedef bool(APIENTRY *PFNWGLSWAPINTERVALEXTPROC)(int interval);
 
-class ContextGL_Win : public ContextGL {
+class ContextGL_Win : public RenderingContext {
 
 	HDC hDC;
 	HGLRC hRC;
