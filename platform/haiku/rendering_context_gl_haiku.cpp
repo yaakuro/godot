@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  context_gl_haiku.h                                                   */
+/*  rendering_context_gl_haiku.cpp                                       */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,37 +28,56 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef CONTEXT_GL_HAIKU_H
-#define CONTEXT_GL_HAIKU_H
+#include "rendering_context_gl_haiku.h"
 
 #if defined(OPENGL_ENABLED)
 
-#include "drivers/gl_context/context_gl.h"
+ContextGL_Haiku::ContextGL_Haiku(HaikuDirectWindow *p_window) {
+	window = p_window;
 
-#include "haiku_direct_window.h"
-#include "haiku_gl_view.h"
+	uint32 type = BGL_RGB | BGL_DOUBLE | BGL_DEPTH;
+	view = new HaikuGLView(window->Bounds(), type);
 
-class ContextGL_Haiku : public ContextGL {
-private:
-	HaikuGLView *view;
-	HaikuDirectWindow *window;
+	use_vsync = false;
+}
 
-	bool use_vsync;
+ContextGL_Haiku::~ContextGL_Haiku() {
+	delete view;
+}
 
-public:
-	ContextGL_Haiku(HaikuDirectWindow *p_window);
-	~ContextGL_Haiku();
+Error ContextGL_Haiku::initialize() {
+	window->AddChild(view);
+	window->SetHaikuGLView(view);
 
-	virtual Error initialize();
-	virtual void release_current();
-	virtual void make_current();
-	virtual void swap_buffers();
-	virtual int get_window_width();
-	virtual int get_window_height();
+	return OK;
+}
 
-	virtual void set_use_vsync(bool p_use);
-	virtual bool is_using_vsync() const;
-};
+void ContextGL_Haiku::release_current() {
+	view->UnlockGL();
+}
 
-#endif
+void ContextGL_Haiku::make_current() {
+	view->LockGL();
+}
+
+void ContextGL_Haiku::swap_buffers() {
+	view->SwapBuffers(use_vsync);
+}
+
+int ContextGL_Haiku::get_window_width() {
+	return window->Bounds().IntegerWidth();
+}
+
+int ContextGL_Haiku::get_window_height() {
+	return window->Bounds().IntegerHeight();
+}
+
+void ContextGL_Haiku::set_use_vsync(bool p_use) {
+	use_vsync = p_use;
+}
+
+bool ContextGL_Haiku::is_using_vsync() const {
+	return use_vsync;
+}
+
 #endif
