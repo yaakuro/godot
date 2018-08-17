@@ -1039,9 +1039,6 @@ Error Main::setup2(Thread::ID p_main_tid_override) {
 	if (p_main_tid_override) {
 		Thread::_main_thread_id = p_main_tid_override;
 	}
-	
-	Color clear = GLOBAL_DEF("rendering/environment/default_clear_color", Color(0.3, 0.3, 0.3));
-	Color boot_bg = GLOBAL_DEF("application/boot_splash/bg_color", clear);
 
 	Error err = OS::get_singleton()->initialize(video_mode, video_driver_idx, audio_driver_idx);
 	if (err != OK) {
@@ -1088,6 +1085,7 @@ Error Main::setup2(Thread::ID p_main_tid_override) {
 
 	MAIN_PRINT("Main: Load Remaps");
 
+	Color clear = GLOBAL_DEF("rendering/environment/default_clear_color", Color(0.3, 0.3, 0.3));
 	VisualServer::get_singleton()->set_default_clear_color(clear);
 
 	if (show_logo) { //boot logo!
@@ -1108,7 +1106,8 @@ Error Main::setup2(Thread::ID p_main_tid_override) {
 		}
 
 		if (boot_logo.is_valid()) {
-			OS::get_singleton()->_msec_splash = OS::get_singleton()->get_ticks_msec();			
+			OS::get_singleton()->_msec_splash = OS::get_singleton()->get_ticks_msec();
+			Color boot_bg = GLOBAL_DEF("application/boot_splash/bg_color", clear);
 			VisualServer::get_singleton()->set_boot_image(boot_logo, boot_bg, boot_logo_scale);
 #ifndef TOOLS_ENABLED
 //no tools, so free the boot logo (no longer needed)
