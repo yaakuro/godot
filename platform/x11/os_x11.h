@@ -33,6 +33,7 @@
 
 #include "context_gl_x11.h"
 #include "crash_handler_x11.h"
+#include "context_vulkan_x11.h"
 #include "drivers/unix/os_unix.h"
 #include "os/input.h"
 #include "servers/visual_server.h"
@@ -98,6 +99,9 @@ class OS_X11 : public OS_Unix {
 
 #if defined(OPENGL_ENABLED)
 	ContextGL_X11 *context_gl;
+#endif
+#if defined(VULKAN_ENABLED)
+	ContextVulkan_X11 *context_vulkan;
 #endif
 	//Rasterizer *rasterizer;
 	VisualServer *visual_server;

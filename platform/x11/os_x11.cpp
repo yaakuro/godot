@@ -31,6 +31,7 @@
 #include "os_x11.h"
 #include "drivers/gles2/rasterizer_gles2.h"
 #include "drivers/gles3/rasterizer_gles3.h"
+#include "drivers/vulkan/rasterizer_vulkan.h"
 #include "errno.h"
 #include "key_mapping_x11.h"
 #include "os/dir_access.h"
@@ -340,6 +341,22 @@ Error OS_X11::initialize(const VideoMode &p_desired, int p_video_driver, int p_a
 	video_driver_index = p_video_driver;
 
 	context_gl->set_use_vsync(current_videomode.use_vsync);
+
+#endif
+#if VULKAN_ENABLED
+	context_vulkan = memnew(ContextVulkan_X11(x11_display, x11_window, current_videomode, true));
+	context_vulkan->initialize();
+
+	RasterizerVulkan::set_vulkan_instance(context_vulkan->get_instance());
+	RasterizerVulkan::set_vulkan_device(context_vulkan->get_device());
+	RasterizerVulkan::set_vulkan_swapchain(context_vulkan->get_swapchain());
+	RasterizerVulkan::set_vulkan_queue(context_vulkan->get_queue());
+	RasterizerVulkan::set_vulkan_command_pool(context_vulkan->get_command_pool());
+	RasterizerVulkan::set_vulkan_command_buffers(context_vulkan->get_command_buffers());
+
+	RasterizerVulkan::register_config();
+	RasterizerVulkan::make_current();
+	
 
 #endif
 	visual_server = memnew(VisualServerRaster);
@@ -2534,7 +2551,6 @@ void OS_X11::set_custom_mouse_cursor(const RES &p_cursor, CursorShape p_shape, c
 		}
 
 		ERR_FAIL_COND(!texture.is_valid());
-		ERR_FAIL_COND(p_hotspot.x < 0 || p_hotspot.y < 0);
 		ERR_FAIL_COND(texture_size.width > 256 || texture_size.height > 256);
 		ERR_FAIL_COND(p_hotspot.x > texture_size.width || p_hotspot.y > texture_size.height);
 
@@ -2598,6 +2614,9 @@ void OS_X11::release_rendering_thread() {
 #if defined(OPENGL_ENABLED)
 	context_gl->release_current();
 #endif
+#if VULKAN_ENABLED
+	context_vulkan->release_current();
+#endif
 }
 
 void OS_X11::make_rendering_thread() {
@@ -2605,12 +2624,18 @@ void OS_X11::make_rendering_thread() {
 #if defined(OPENGL_ENABLED)
 	context_gl->make_current();
 #endif
+#if VULKAN_ENABLED
+	context_vulkan->make_current();
+#endif
 }
 
 void OS_X11::swap_buffers() {
 
 #if defined(OPENGL_ENABLED)
 	context_gl->swap_buffers();
+#endif
+#if VULKAN_ENABLED
+	context_vulkan->swap_buffers();
 #endif
 }
 
@@ -2804,12 +2829,21 @@ void OS_X11::_set_use_vsync(bool p_enable) {
 	if (context_gl)
 		context_gl->set_use_vsync(p_enable);
 #endif
+#if VULKAN_ENABLED
+	if (context_vulkan)
+		return context_vulkan->set_use_vsync(p_enable);
+#endif
 }
 /*
 bool OS_X11::is_vsync_enabled() const {
 
 	if (context_gl)
 		return context_gl->is_using_vsync();
+#endif
+#if VULKAN_ENABLED
+	if (context_vulkan)
+		return context_vulkan->is_using_vsync();
+#endif
 
 	return true;
 }

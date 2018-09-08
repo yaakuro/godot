@@ -30,7 +30,9 @@ SConscript('winmidi/SCsub')
 if (env["platform"] != "server"):
     SConscript('gles3/SCsub')
     SConscript('gles2/SCsub')
+    SConscript('vulkan/SCsub')
     SConscript('gl_context/SCsub')
+    SConscript('vulkan_context/SCsub')
 else:
     SConscript('dummy/SCsub')
 
