@@ -38,6 +38,8 @@ else:
 
 # Core dependencies
 SConscript("png/SCsub")
+SConscript("shaderc/SCsub")
+SConscript("spirv_cross/SCsub")
 
 # Tools override
 # FIXME: Should likely be integrated in the tools/ codebase
