@@ -55,10 +55,6 @@
 #define VKF_VAR_EXPORT VKFAPI
 #define VKF_FUN_EXPORT VKFAPI
 
-#define VK_GLOBAL_FUNC(function)                                           \
-	function = (PFN_##function)vkGetInstanceProcAddr(NULL, #function);     \
-	assert(function);
-
 #define CHECK_VULKAN(VULKAN_FUNCTION) 	{ \
 		VkResult result = VULKAN_FUNCTION; \
 		if(VK_SUCCESS != result) { \
@@ -504,6 +500,46 @@ namespace vkf {
 			uint32_t m_size;
 	};
 
+	class FileName {
+		public:
+			FileName(const std::string& filename)
+				: m_filename(filename) {
+
+			}
+
+			operator const char* () const {
+				return m_filename.c_str();
+			}
+
+		private:
+
+			std::string m_filename;
+	};
+
+	class ShaderSource {
+		public:
+			ShaderSource(const std::string& source)
+				: m_source(source) {
+
+			}
+
+			uint32_t size() const {
+				return (uint32_t)m_source.size();
+			}
+
+			uint32_t* data() const {
+				return (uint32_t*)m_source.data();
+			}
+
+			operator const char* () const {
+				return m_source.c_str();
+			}
+
+		private:
+
+			std::string m_source;
+	};
+
 	/**
 	 * @class Debug
 	 * @brief Helper class for VkDebugReportCallbackEXT.
@@ -811,7 +847,7 @@ namespace vkf {
 	 * @struct Fence
 	 * @brief Helper struct for VkFence.
 	 */
-	struct Fence {
+	class Fence {
 		public:
 			friend class FenceManager;
 
@@ -962,10 +998,6 @@ namespace vkf {
 
 			/// Returns the extend2D of this surface.
 			VkExtent2D getExtent2D() const;
-
-			void getSurface(SurfaceType* surface) {
-				*surface = m_surface;
-			}
 
 			operator VkSurfaceKHR() {
 				return m_surface;
@@ -1375,7 +1407,7 @@ namespace vkf {
 			~ShaderModule();
 
 			/// Load the shader source.
-			bool load(const std::string& filename);
+			bool load(const FileName& filename);
 
 			/// Destroy the shader.
 			void destroy();

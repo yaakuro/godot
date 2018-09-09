@@ -26,6 +26,9 @@
 #ifdef __linux__
 #include <dlfcn.h>
 #define VKF_FUNCTION_LOAD(LIBRARY, entrypoint) entrypoint = (PFN_##entrypoint)dlsym(LIBRARY, #entrypoint);
+#elif defined(WIN32)
+#include <windows.h>
+#define VKF_FUNCTION_LOAD(LIBRARY, entrypoint) entrypoint = (PFN_##entrypoint)GetProcAddress(static_cast<HMODULE>(LIBRARY), #entrypoint);
 #endif
 
 #include <string>
@@ -320,6 +323,11 @@ bool loadVulkanLibrary() {
 	if(sharedLibrary == NULL) {
 		return false;
 	}
+#elif defined(WIN32)
+	sharedLibrary = LoadLibraryA("vulkan-1.dll");
+	if(sharedLibrary == NULL) {
+		return false;
+	}
 #endif
 	VKF_FUNCTION_LOAD(sharedLibrary, vkGetInstanceProcAddr)
 	VKF_FUNCTION_LOAD(sharedLibrary, vkGetInstanceProcAddr)
@@ -515,6 +523,42 @@ bool loadVulkanLibrary() {
 #if defined(VK_USE_PLATFORM_IOS_MVK) && defined(VK_NO_PROTOTYPES)
 	VKF_FUNCTION_LOAD(sharedLibrary, vkCreateIOSSurfaceMVK)
 #endif
+
+
+// -----------------------------------------------------------------------------
+// Vulkan 1.1
+//
+#ifdef VK_NO_PROTOTYPES
+	VKF_FUNCTION_LOAD(sharedLibrary, vkEnumerateInstanceVersion)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkBindBufferMemory2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkBindImageMemory2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetDeviceGroupPeerMemoryFeatures)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkCmdSetDeviceMask)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkCmdDispatchBase)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkEnumeratePhysicalDeviceGroups)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetImageMemoryRequirements2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetBufferMemoryRequirements2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetImageSparseMemoryRequirements2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceFeatures2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceProperties2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceFormatProperties2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceImageFormatProperties2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceQueueFamilyProperties2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceMemoryProperties2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceSparseImageFormatProperties2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkTrimCommandPool)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetDeviceQueue2)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkCreateSamplerYcbcrConversion)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkDestroySamplerYcbcrConversion)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkCreateDescriptorUpdateTemplate)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkDestroyDescriptorUpdateTemplate)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkUpdateDescriptorSetWithTemplate)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceExternalBufferProperties)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceExternalFenceProperties)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetPhysicalDeviceExternalSemaphoreProperties)
+	VKF_FUNCTION_LOAD(sharedLibrary, vkGetDescriptorSetLayoutSupport)
+#endif
+
 	return true;
 }
 
@@ -523,10 +567,17 @@ void init() {
 }
 
 void destroy() {
+#ifdef __linux__
 	if(NULL != sharedLibrary) {
 		dlclose(sharedLibrary);
 		sharedLibrary = NULL;
 	}
+#elif defined(WIN32)
+	if(NULL != sharedLibrary) {
+		FreeLibrary(static_cast<HMODULE>(sharedLibrary));
+		sharedLibrary = NULL;
+	}
+#endif
 }
 
 namespace vkf {
@@ -625,18 +676,11 @@ namespace vkf {
 	}
 
 	void init() {
-#ifdef VK_NO_PROTOTYPES
-		loadVulkanLibrary();
-#endif
+		::loadVulkanLibrary();
 	}
 
 	void destroy() {
-#ifdef VK_NO_PROTOTYPES
-		if(NULL != sharedLibrary) {
-			dlclose(sharedLibrary);
-			sharedLibrary = NULL;
-		}
-#endif
+		::destroy();
 	}
 
 	VkResult showSupportedLayersAndExtensions() {
@@ -1876,7 +1920,7 @@ namespace vkf {
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.hinstance = (HINSTANCE)m_window->getInstance();
 		surfaceCreateInfo.hwnd = (HWND)m_window->getHandle();
-		result = vkCreateWin32SurfaceKHR(m_device.getInstance(), &surfaceCreateInfo, NULL, &m_surface);
+		result = vkCreateWin32SurfaceKHR(*m_device->getInstance(), &surfaceCreateInfo, NULL, &m_surface);
 #elif defined(__ANDROID__)
 		VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo;
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
@@ -1940,10 +1984,9 @@ namespace vkf {
 			// check for it's presence
 			m_colorFormat = surfaceFormats[0].format;
 		}
-		surfaceFormats.clear();
-
-
 		m_colorSpace = surfaceFormats[0].colorSpace;
+
+		surfaceFormats.clear();
 
 		// Get physical device surface properties and formats.
 		result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_device->getPhysicalDevice(), m_surface, &m_surfCaps);
@@ -2981,9 +3024,9 @@ namespace vkf {
 
 	}
 
-	bool ShaderModule::load(const std::string& filename) {
+	bool ShaderModule::load(const FileName& filename) {
 
-		std::ifstream is(filename.c_str(), std::ios::binary | std::ios::in | std::ios::ate);
+		std::ifstream is(filename, std::ios::binary | std::ios::in | std::ios::ate);
 		if(is.is_open()) {
 
 			//
