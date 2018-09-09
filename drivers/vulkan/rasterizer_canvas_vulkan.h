@@ -33,6 +33,7 @@
 
 #include "servers/visual/rasterizer.h"
 #include "vulkan_framework.h"
+#include "shaders/canvas.glsl.gen.h"
 
 class RasterizerStorageVulkan;
 class RasterizerSceneVulkan;
@@ -57,6 +58,8 @@ class RasterizerCanvasVulkan : public RasterizerCanvas {
 
 		void draw_generic_textured_rect(const Rect2 &p_rect, const Rect2 &p_src);
 
+		CanvasShaderVulkan canvas_shader;
+		
 		RasterizerStorageVulkan* storage;
 		RasterizerSceneVulkan* scene_render;
 		uint32_t currentBufferIndex;
